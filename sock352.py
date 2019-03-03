@@ -53,6 +53,8 @@ def connect(self,address):  # fill in your code here
         header_len = struct.size(udpPkt_hdr_data)
         header = udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, checksum,
                                          source_port, dest_port, seq_no, ack_no, window, payload_len)
+	
+	self.socket.connect(address, int(UDPportPX))
 	return
 
 def listen(self,backlog):
