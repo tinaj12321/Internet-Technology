@@ -50,7 +50,7 @@ def connect(self,address):  # fill in your code here
         window = 0
         payload_len = 0     # Part 1
         udpPkt_hdr_data = struct.Struct(sock352PktHdrData)      # returns struct obj, R/W binary data according to the given format
-        header_len = struct.size(udpPkt_hdr_data)
+        header_len = struct.size(sock352PktHdrData)
         header = udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, checksum,
                                          source_port, dest_port, seq_no, ack_no, window, payload_len)
 	return
