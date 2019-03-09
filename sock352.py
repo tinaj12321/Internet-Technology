@@ -5,9 +5,9 @@ import struct
 import sys
 
 # Flags
-SOCK352_SYN = 0x01          # initiate connection
+SOCK352_SYN = bytearray(0x01)          # initiate connection
 SOCK352_FIN = 0x02          # end connection
-SOCK352_ACK = 0x04          # ack number
+SOCK352_ACK = bytearray(0x04)          # ack number
 SOCK352_RESET = 0x08        # reset the connection
 SOECK352_HAS_OPT = 0xA0     # option field is valid
 portTx = 0
@@ -85,15 +85,15 @@ class socket:
 
 	def accept(self):
 		(clientsocket, address) = (1,1)  # change this to your code
-
-		(serversocket, address) = (1,1)
 		clientsocket = self
+		serversocket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
+		serversocket.bind(serversocket, portRx)
 		#3-way handshake occurs here
 		serversocket.send(SOCK352_SYN)
 		clientsocket.recv(SOCK352_SYN)
 		clientsocket.send(SOCK352_ACK)
 		serversocket.recv(SOCK352_ACK)
-		socket.bind(self, int(UDPportTx))
+		socket.bind(self, portTx)
 		return self
 
 	def close(self):   # fill in your code here
