@@ -64,6 +64,8 @@ class socket:
 
 	def accept(self):
 		(clientsocket, address) = (1,1)  # change this to your code
+
+		(serversocket, address) = (1,1)
 		clientsocket = self
 		#3-way handshake occurs here
 		serversocket.send(SOCK352_SYN)
