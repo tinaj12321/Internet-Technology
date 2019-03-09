@@ -12,7 +12,6 @@ SOCK352_RESET = 0x08        # reset the connection
 SOECK352_HAS_OPT = 0xA0     # option field is valid
 
 sock352PktHdrData = '!BBBBHHLLQQLL'
-
 # these functions are global to the class and
 # define the UDP ports all messages are sent
 # and received from
@@ -32,6 +31,8 @@ class socket:
         return
 
 def bind(self,address):
+
+
         return
 
 def connect(self,address):  # fill in your code here
@@ -55,8 +56,8 @@ def connect(self,address):  # fill in your code here
         header = self.udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, header_len, checksum,
                                          source_port, dest_port, seq_no, ack_no, window, payload_len)
 
-	self.bind(self, int(UDPportRX))	
-	self.socket.connect(address, int(UDPportRX))
+	self.bind(self, int(UDPportRx))	
+	self.socket.connect(address, int(UDPportRx))
 	return
 
 def listen(self,backlog):
@@ -64,6 +65,7 @@ def listen(self,backlog):
 
 def accept(self):
 	(clientsocket, address) = (1,1)  # change this to your code
+	self.socket.bind(self, int(UDPportTx))
 	return (clientsocket,address)
 
 def close(self):   # fill in your code here
