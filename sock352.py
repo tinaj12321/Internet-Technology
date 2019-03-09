@@ -115,7 +115,7 @@ class socket:
         	window = int(load[10])
         	payload_len = int(load[11])  # Part 1
 		
-		parse_flag(flags)
+		f = parse_flag(flags)
         	# returns f = (opt, reset, ack, fin, syn)
 		
 		
