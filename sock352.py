@@ -119,20 +119,22 @@ class socket:
         	# returns f = (opt, reset, ack, fin, syn)
 		
 		
-		bytessent = len(buffer)
+        	bytes_to_send = payload_len
+        	segments = 0        # total number of segments
+        	seg_ack = 0         # last ack sent (turn this into a list and pop/append)
 	        # send the size of the file as a 4 byte integer
         	# to the server, so it knows how much to read
-        	# FRAGMENTSIZE = 8192
-        	# while (bytes_to_send > 0):
-        	#     fragment = fd.read(FRAGMENTSIZE)
-        	#     totalsent = 0
-        	#     # make sure we sent the whole fragment
-        	#     while (totalsent < len(fragment)):
-        	#         sent = s.send(fragment[totalsent:])
-        	#         if (sent == 0):
-        	#             raise RuntimeError("socket broken")
-        	#         totalsent = totalsent + sent
-        	#     bytes_to_send = bytes_to_send - len(fragment)	
+        	FRAGMENTSIZE = 8192
+        	while (bytes_to_send > 0):
+            		fragment = fd.read(FRAGMENTSIZE)
+            		bytessent = 0
+            	# make sure we sent the whole fragment
+            	while (bytessent < len(fragment)):
+                	sent = s.send(fragment[bytessent:])
+                	if (sent == 0):
+                    		raise RuntimeError("socket broken")
+                	bytessent = bytessent + sent
+            	bytes_to_send = bytes_to_send - len(fragment)	
 		
 		return bytessent
 
