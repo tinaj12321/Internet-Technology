@@ -69,19 +69,15 @@ def listen(self,backlog):
 
 def accept(self):
 	(clientsocket, address) = (1,1)  # change this to your code
-
-	#3-way handshake occurs here
-	self.serversocket.send(SOCK352_SYN)
-	self.clientsocket.recv(SOCK352_SYN)
-	self.clientsocket.send(SOCK352_ACK)
-	self.serversocket.recv(SOCK352_ACK)
-	self.socket.bind(self, int(UDPportTx))
-<<<<<<< HEAD
-	return self
-=======
 	clientsocket = self
+	#3-way handshake occurs here
+	serversocket.send(SOCK352_SYN)
+	clientsocket.recv(SOCK352_SYN)
+	clientsocket.send(SOCK352_ACK)
+	serversocket.recv(SOCK352_ACK)
+	socket.bind(self, int(UDPportTx))
+	return self
 	return (clientsocket,address)
->>>>>>> 4cf0c70bbda15a335de092188488273a8a60dc53
 
 def close(self):   # fill in your code here
 	return
