@@ -21,10 +21,8 @@ def init(UDPportTx,UDPportRx):   # initialize your UDP socket here
 		UDPportRx = 42069
 	if UDPportTx == 0:
 		UDPportTx = 42069
-	global portTx
-	portTx = UDPportTx
-	global port Rx
-	portRx = UDPportRx
+	global portTx = UDPportTx
+	global portRx = UDPportRx
 	pass 
     
 class socket:
@@ -77,7 +75,6 @@ def accept(self):
 	serversocket.recv(SOCK352_ACK)
 	socket.bind(self, int(UDPportTx))
 	return self
-	return (clientsocket,address)
 
 def close(self):   # fill in your code here
 	return
