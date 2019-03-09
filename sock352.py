@@ -27,7 +27,7 @@ def init(UDPportTx,UDPportRx):   # initialize your UDP socket here
 class socket:
 	def __init__(self):  # fill in your code here 
 		self.socket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
-	self.udpPkt_hdr_data = struct.Struct(sock352PktHdrData)  # returns struct obj, R/W binary data according to the given format
+		self.udpPkt_hdr_data = struct.Struct(sock352PktHdrData)  # returns struct obj, R/W binary data according to the given format
 
         return
 
@@ -54,8 +54,9 @@ def connect(self,address):  # fill in your code here
         header_len = struct.calcsize(sock352PktHdrData)
         header = self.udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, header_len, checksum,
                                          source_port, dest_port, seq_no, ack_no, window, payload_len)
-	
-	self.socket.connect(address, int(UDPportPX))
+
+	self.bind(self, int(UDPportRX))	
+	self.socket.connect(address, int(UDPportRX))
 	return
 
 def listen(self,backlog):
