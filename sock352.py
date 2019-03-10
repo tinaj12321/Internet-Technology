@@ -57,7 +57,7 @@ class socket:
 		return
 
 	def bind(self,address):
-		self.sock.bind(address)
+		self.serversocket.bind(address)
 		return
 
 	def connect(self,address):  # fill in your code here
@@ -78,7 +78,7 @@ class socket:
         	header_len = struct.calcsize(sock352PktHdrData)
         	header = self.udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, header_len, checksum, source_port, dest_port, seq_no, ack_no, window, payload_len)
 		clientsocket = self
-		self.bind(self, int(UDPportRx))
+#		self.bind(self, int(UDPportRx))
 		
 		clientsocket.recv(SOCK352_SYN)
  		clientsocket.send(SOCK352_ACK)
@@ -91,13 +91,13 @@ class socket:
 	def accept(self):
 		(clientsocket, address) = (1,1)  # change this to your code
 		serversocket = self
-		serversocket.bind(serversocket, portTx)
+		serversocket.bind(self, portTx)
 		#3-way handshake occurs here
 		serversocket.send(SOCK352_SYN)
 #		clientsocket.recv(SOCK352_SYN)
 #		clientsocket.send(SOCK352_ACK)
 		serversocket.recv(SOCK352_ACK)
-		socket.bind(self, portTx)
+#		socket.bind(self, portTx)
 		return self
 
 	def close(self):   # fill in your code here
@@ -150,14 +150,14 @@ class socket:
 	def recv(self,nbytes):
 
 		bytesreceived = 0     # fill in your code here
-		 chunks = []
+		chunks = []
         	bytes_recd = 0
         	while bytes_recd < MSGLEN:
-            	chunk = self.sock.recv(min(MSGLEN - bytes_recd, 2048))
-            	if chunk == b'':
-                raise RuntimeError("socket connection broken")
-            	chunks.append(chunk)
-            	bytes_recd = bytes_recd + len(chunk)
+	            	chunk = self.sock.recv(min(MSGLEN - bytes_recd, 2048))
+        	    	if chunk == b'':
+                		raise RuntimeError("socket connection broken")
+            		chunks.append(chunk)
+            		bytes_recd = bytes_recd + len(chunk)
         	return b''.join(chunks)
 	#	return bytesreceived 
 
