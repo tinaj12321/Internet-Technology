@@ -120,12 +120,17 @@ class socket:
         	payload_len = int(load[11])  # Part 1
 		
 		f = parse_flag(flags)
-        	i# returns f = (opt, reset, ack, fin, syn)
+        	# returns f = (opt, reset, ack, fin, syn)
 		
 		
         	bytes_to_send = payload_len
-        	segments = 0        # total number of segments
+        	segments = math.ceil(payload_len/max_packsize)        # total number of segments (use for seq number)
         	seg_ack = 0         # last ack sent (turn this into a list and pop/append)
+		# 64000 - '!BBBBHHLLQQLL' = amt to send (must account for header in package size)
+        	# load[0:64000]
+        	# load[64000:2 x 64000]
+		
+		
 	        # send the size of the file as a 4 byte integer
         	# to the server, so it knows how much to read
         	FRAGMENTSIZE = 8192
