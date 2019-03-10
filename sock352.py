@@ -52,8 +52,7 @@ class socket:
 	def __init__(self):  # fill in your code here 
 		self.socket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
 		self.udpPkt_hdr_data = struct.Struct(sock352PktHdrData)  # returns struct obj, R/W binary data according to the given format
-
-	        return
+		return
 
 	def bind(self,address):
 		self.socket.bind(address)
@@ -85,7 +84,6 @@ class socket:
 
 	def accept(self):
 		(clientsocket, address) = (1,1)  # change this to your code
-		clientsocket = self
 		serversocket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
 		serversocket.bind(serversocket, portRx)
 		#3-way handshake occurs here
@@ -94,6 +92,7 @@ class socket:
 		clientsocket.send(SOCK352_ACK)
 		serversocket.recv(SOCK352_ACK)
 		socket.bind(self, portTx)
+		clientsocket = self
 		return self
 
 	def close(self):   # fill in your code here
@@ -116,7 +115,7 @@ class socket:
         	payload_len = int(load[11])  # Part 1
 		
 		f = parse_flag(flags)
-        	# returns f = (opt, reset, ack, fin, syn)
+        	i# returns f = (opt, reset, ack, fin, syn)
 		
 		
         	bytes_to_send = payload_len
