@@ -50,12 +50,13 @@ def parse_flag(flags):    # process header flags
 
 class socket:
 	def __init__(self):  # fill in your code here 
-		self.socket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
+		self.clientsocket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
+		self.serversocket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
 		self.udpPkt_hdr_data = struct.Struct(sock352PktHdrData)  # returns struct obj, R/W binary data according to the given format
 		return
 
 	def bind(self,address):
-		self.socket.bind(address)
+		self.sock.bind(address)
 		return
 
 	def connect(self,address):  # fill in your code here
@@ -75,7 +76,11 @@ class socket:
         	payload_len = 0     # Part 1
         	header_len = struct.calcsize(sock352PktHdrData)
         	header = self.udpPkt_hdr_data.pack(version, flags, opt_ptr, protocol, header_len, checksum, source_port, dest_port, seq_no, ack_no, window, payload_len)
-		self.bind(self, int(UDPportRx))	
+		clientsocket = self
+		self.bind(self, int(UDPportRx))
+		
+		clientsocket.recv(SOCK352_SYN)
+ 		clientsocket.send(SOCK352_ACK)
 		self.socket.connect(address, int(UDPportRx))
 		return
 
@@ -84,15 +89,14 @@ class socket:
 
 	def accept(self):
 		(clientsocket, address) = (1,1)  # change this to your code
-		serversocket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
-		serversocket.bind(serversocket, portRx)
+		serversocket = self
+		serversocket.bind(serversocket, portTx)
 		#3-way handshake occurs here
 		serversocket.send(SOCK352_SYN)
-		clientsocket.recv(SOCK352_SYN)
-		clientsocket.send(SOCK352_ACK)
+#		clientsocket.recv(SOCK352_SYN)
+#		clientsocket.send(SOCK352_ACK)
 		serversocket.recv(SOCK352_ACK)
 		socket.bind(self, portTx)
-		clientsocket = self
 		return self
 
 	def close(self):   # fill in your code here
