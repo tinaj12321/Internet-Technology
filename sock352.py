@@ -14,7 +14,8 @@ portTx = 0
 portRx = 0
 
 sock352PktHdrData = '!BBBBHHLLQQLL'
-max_packsize = 64000        # in bytes
+max_packsize = bin(64000)        # in bytes
+segments = 0
 # these functions are global to the class and
 # define the UDP ports all messages are sent
 # and received from
