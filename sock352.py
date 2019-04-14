@@ -146,7 +146,10 @@ class socket:
 
         # sets the send address to be None (to be initialized later)
         self.send_address = None
-
+        
+        # sets the encryption flag to False
+        self.encrypt = False
+        
         # sets the boolean for whether or not the socket is connected
         self.is_connected = False
 
