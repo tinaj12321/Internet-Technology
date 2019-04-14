@@ -182,16 +182,90 @@ class socket:
         return
 
     def connect(self,*args):                # different from Project 1 code because it's *args instead of address
-        # sets the send address to the tuple (address ip, transmit port)
-        self.send_address = (args[0], portTx)        # (address[0], portTx)
+        # example code to parse an argument list (use option arguments if you want)
+        global portTx  # sock352portTx
+        global ENCRYPT
+        if (len(args)>=1):
+            # Example code:
+            # (host, port) = args[0]
 
-        # binds the client on the receiving port
-        self.socket.bind((args[0], portRx))          # (address[0], portRx)
+            # sets the send address to the tuple (address ip, transmit port)
+            self.send_address = (args[0], portTx)        # (address[0], portTx)
 
-        # makes sure the client isn't already connected. If it is, prints an error message
-        if self.is_connected:
-            print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
-            return
+            # binds the client on the receiving port
+            self.socket.bind((args[0], portRx))          # (address[0], portRx)
+
+            # makes sure the client isn't already connected. If it is, prints an error message
+            if self.is_connected:
+                print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
+                return
+        if (len(args)>=2):
+            # check constant, add encryption
+            # create nonces, find keys, create Box object
+            # FILL IN WITH CODE
+            if (args[1] == ENCRYPT):
+                self.encrypt = True
+                socket_box = Box(args[0])   # test, possible (host,port)
+
+        # Bob wishes to send Alice an encrypted message so Bob must make a Box with
+        #   his private key and Alice's public key
+        #bob_box = Box(skbob, pkalice)
+
+        else:
+            print("ERROR: Provide destination host and port number")
+
+
+        # Step 1: Request to connect to the server by setting the SYN flag
+        # first the packet is created using createPacket and passing in the apprpriate variables
+        syn_packet = self.createPacket(flags=SOCK352_SYN, sequence_no=self.sequence_no)
+        self.socket.sendto(syn_packet, self.send_address)
+        # increments the sequence since it was consumed in creation of the SYN packet
+        self.sequence_no += 1
+
+        # Receives the SYN_ACK from Step 2 within accept()
+
+        received_handshake_packet = False
+        while not received_handshake_packet:
+            try:
+                # tries to receive a SYN/ACK packet from the server using recvfrom and unpacks it
+                (syn_ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
+                syn_ack_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_ack_packet)
+                # if it receives a reset marked flag for any reason, abort the handshake
+                if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_RESET:
+                    print
+                    "Connection was reset by the server"
+                    return
+
+                # if it receives a packet, and it is SYN/ACK, we are done
+                if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_ACK:
+                    received_handshake_packet = True
+
+                # if it receives a packet with an incorrect ACK from its sequence number,
+                # it tries to receive more packets
+                if syn_ack_packet[PACKET_ACK_NO_INDEX] != self.sequence_no:
+                    received_handshake_packet = False
+            # retransmits the SYN packet in case of timeout when receiving a SYN/ACK from the server
+            except syssock.timeout:
+                self.socket.sendto(syn_packet, self.send_address)
+
+        # sets the client's acknowledgement number to be SYN/ACK packet's sequence number + 1
+        self.ack_no = syn_ack_packet[PACKET_SEQUENCE_NO_INDEX] + 1
+
+        # Step 3: Send a packet with the ACK flag set to acknowledge the SYN/ACK packet
+        ack_packet = self.createPacket(flags=SOCK352_ACK,
+                                       sequence_no=self.sequence_no,
+                                       ack_no=self.ack_no)
+        # increments the sequence number as it was consumed by the ACK packet
+        self.sequence_no += 1
+
+        # sets the connected boolean to be true
+        self.is_connected = True
+
+        # sends the ack packet to the server, as it assumes it's connected now
+        self.socket.sendto(ack_packet, self.send_address)
+        print("Client is now connected to the server at %s:%s" % (self.send_address[0], self.send_address[1]))
+
+
 
         # Step 1: Request to connect to the server by setting the SYN flag
         # first the packet is created using createPacket and passing in the apprpriate variables
