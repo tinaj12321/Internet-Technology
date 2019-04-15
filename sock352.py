@@ -3,7 +3,8 @@
 # You wil need to fill in the various methods in this
 # library
 
-#This is lightly edited code from Anarav Patel and Saurin Shah
+# This is lightly edited code from Anarav Patel and Saurin Shah
+# Some of the code may not run properly... Weren't able to test Box/nonce things due to issues with NaCl library 
 # main libraries
 import binascii
 import threading
@@ -195,18 +196,16 @@ class socket:
 
             # sets the send address to the tuple (address ip, transmit port)
             self.send_address = (args[0], portTx)        # (address[0], portTx)
-
             # binds the client on the receiving port
             self.socket.bind((args[0], portRx))          # (address[0], portRx)
-
             # makes sure the client isn't already connected. If it is, prints an error message
             if self.is_connected:
                 print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
                 return
+              
         if (len(args)>=2):
             # check constant, add encryption
             # create nonce, find keys, create Box object
-            # FILL IN WITH CODE
             if (args[1] == ENCRYPT):
                 self.encrypt = True
                 # Note: we had trouble figuring out how to create the box
@@ -216,7 +215,6 @@ class socket:
                 # Bob wishes to send Alice an encrypted message so Bob must make a Box with
                 #   his private key and Alice's public key
                 #bob_box = Box(skbob, pkalice)
-
         else:
             print("ERROR: Provide destination host and port number")
 
