@@ -196,25 +196,30 @@ class socket:
 
             # sets the send address to the tuple (address ip, transmit port)
             self.send_address = (args[0], portTx)        # (address[0], portTx)
+
             # binds the client on the receiving port
             self.socket.bind((args[0], portRx))          # (address[0], portRx)
+
             # makes sure the client isn't already connected. If it is, prints an error message
             if self.is_connected:
                 print(CONNECTION_ALREADY_ESTABLISHED_MESSAGE)
                 return
-              
         if (len(args)>=2):
             # check constant, add encryption
             # create nonce, find keys, create Box object
+            # FILL IN WITH CODE
             if (args[1] == ENCRYPT):
                 self.encrypt = True
                 # Note: we had trouble figuring out how to create the box
                 #       we didn't figure out the parameters in time
+                # We would've created a new box with the server's private key and the client's public key
+                # since the client calls this method to encrypt an outgoing packet
                 socket_box = Box(args[0,0], args[0,1])   # test, possible (host,port)
                 nonce = nacl.utils.random(Box.NONCE_SIZE)
                 # Bob wishes to send Alice an encrypted message so Bob must make a Box with
                 #   his private key and Alice's public key
                 #bob_box = Box(skbob, pkalice)
+
         else:
             print("ERROR: Provide destination host and port number")
 
@@ -224,6 +229,10 @@ class socket:
         syn_packet = self.createPacket(flags=SOCK352_SYN, sequence_no=self.sequence_no)
         # we need to encrypt the new packet before sending it
         if (self.encrypt == True):
+            # Needed to make another box to send it (maybe we could've used the previous box, we weren't sure)
+            # Had trouble figuring out Box parameters
+            # We would've created a new box with the server's private key and the client's public key
+            # since the client calls this method to encrypt an outgoing packet
             encrypted = socket_box.encrypt(syn_packet, nonce)
             syn_ack_packet = encrypted
         self.socket.sendto(syn_packet, self.send_address)
@@ -239,6 +248,10 @@ class socket:
                 (syn_ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
                 # Create a box and decrypt the message
                 if (self.encrypt == True):
+                    # Needed to make another box to send it (maybe we could've used the previous box, we weren't sure)
+                    # Had trouble figuring out Box parameters
+                    # We would've created a new box with the server's public key and the client's private key
+                    # since the client calls this method to decrypt an outgoing packet
                     header = socket_box.decrypt(syn_ack_packet)
                     syn_ack_packet = header
                 syn_ack_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_ack_packet)
@@ -274,8 +287,10 @@ class socket:
         self.is_connected = True
 
         # sends the ack packet to the server, as it assumes it's connected now
-        # Need to encrypt the packet before sending (might not be correctly implemented here, wasn't sure about the nonce)
-        # Needed to make another box to send it
+        # Needed to make another box to send it (maybe we could've used the previous box, we weren't sure)
+        # Had trouble figuring out Box parameters
+        # We would've created a new box with the server's private key and the client's public key
+        # since the client calls this method to encrypt an outgoing packet
         if (self.encrypt == True):
             encrypted = socket_box.encrypt(ack_packet, nonce)
             ack_packet = encrypted
@@ -307,9 +322,12 @@ class socket:
                         # Take keys and use them to create another box
                         # Note: we had trouble figuring out how to create the box
                         #       we didn't figure out the parameters in time
-                        # Maybe we need to decrypt here? To read the header
+                        # We would've created a new box with the server's private key and the client's public key
+                        # since the server calls this method to decrypt an incoming packet
                         socket_box = Box(args[0, 0], args[0, 1])  # test, possible (host,port)
                         nonce = nacl.utils.random(Box.NONCE_SIZE)
+                        header = socket_box.decrypt(syn_packet)
+                        syn_packet = header
 
                 syn_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_packet)
 
@@ -331,15 +349,15 @@ class socket:
         # increments the sequence number as it just consumed it when creating the SYN/ACK packet
         self.sequence_no += 1
         # sends the created packet to the address from which it received the SYN packet
-        # Need to encrypt the contents of the packet (didn't get to implement properly here)
-        if(self.encrypt = True):
+        if (self.encrypt == True):
+            # Need to encrypt the contents of the packet (didn't get to implement properly here)
+            # Needed to make another box to send it
+            # Had trouble figuring out Box parameters
+            # We would've created a new box with the server's public key and the client's private key
+            # since the server calls this method to encrypt an outgoing packet
             encrypted = socket_box.encrypt(syn_ack_packet, nonce)
-            self.socket.sendto(encrypted, addr)        # was self.socket.sendto(syn_ack_packet, addr)
-        else:
-            self.socket.sendto(syn_ack_packet, addr)
-
-
-        
+            syn_ack_packet = encrypted
+        self.socket.sendto(syn_ack_packet, addr)
 
         # Receive the final ACK to complete the handshake and establish connection
         got_final_ack = False
@@ -347,26 +365,29 @@ class socket:
             try:
                 # keeps trying to receive the final ACK packet to finalize the connection
                 (ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
-                # May need to decrypt the packet contents here (didn't get to implement)
                 if (self.encrypt == True):
+                    # We would need to create another box here (maybe we could've used the previous box, we weren't sure)
+                    # Had trouble figuring out Box parameters
+                    # We would've created a new box with the server's private key and the client's public key
+                    # since the server calls this method to decrypt an incoming packet
                     header = socket_box.decrypt(ack_packet)
-                    # depending on how we get this to work, we need to rename this
                     ack_packet = header
-                else:
-                    ack_packet = struct.unpack(PACKET_HEADER_FORMAT, ack_packet)
+                ack_packet = struct.unpack(PACKET_HEADER_FORMAT, ack_packet)
                 # if the unpacked packet has the ACK flag set, we are done
                 if ack_packet[PACKET_FLAG_INDEX] == SOCK352_ACK:
                     got_final_ack = True
             # if the server times out when trying to receive the final ACK, it retransmits the SYN/ACK packet
             except syssock.timeout:
                 # Need to encrypt the packet before sending (might not be correctly implemented here, wasn't sure about the nonce)
-
                 if (self.encrypt == True):
-                    # Needed to make another box to send it
+                    # Needed to make another box to send it (maybe we could've used the previous box, we weren't sure)
+                    # Had trouble figuring out Box parameters
+                    # We would've created a new box with the server's public key and the client's private key
+                    # since the server calls this method to encrypt an outgoing packet
                     encrypted = socket_box.encrypt(syn_ack_packet, nonce)
                     syn_ack_packet = encrypted
-                else:
-                    self.socket.sendto(syn_ack_packet, addr)
+                self.socket.sendto(syn_ack_packet, addr)
+
         # updates the server's ack number to be the last packet's sequence number + 1
         self.ack_no = ack_packet[PACKET_SEQUENCE_NO_INDEX] + 1
 
@@ -635,6 +656,12 @@ class socket:
         # the sequence number is incremented since it was consumed upon packet creation
         self.sequence_no += 1
         # the server sends the packet to ACK the data packet it received
+        # if(self.encrypt == True):
+            # Needed to make another box to send it
+            # Couldn't figure out Box params, but this would be server's private key, client's public key
+            # socket_box = Box.(args[0, 0], args[0, 1])
+            # encrypted = socket_box.encrypt(syn_ack_packet, nonce)
+            # syn_ack_packet = encrypted
         self.socket.sendto(ack_packet, self.send_address)
 
         # the data or the payload is then itself is returned from this method
