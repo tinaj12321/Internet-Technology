@@ -184,10 +184,12 @@ class socket:
         self.socket.bind((address[0], portRx))
         return
 
-    def connect(self,*args):                # different from Project 1 code because it's *args instead of address
+   def connect(self,*args):                # different from Project 1 code because it's *args instead of address
         # example code to parse an argument list (use option arguments if you want)
         global portTx  # sock352portTx
         global ENCRYPT
+        nonce = -1      # we initialize nonce later if it's needed
+
         if (len(args)>=1):
             # Example code:
             # (host, port) = args[0]
@@ -204,11 +206,14 @@ class socket:
                 return
         if (len(args)>=2):
             # check constant, add encryption
-            # create nonces, find keys, create Box object
+            # create nonce, find keys, create Box object
             # FILL IN WITH CODE
             if (args[1] == ENCRYPT):
                 self.encrypt = True
-                socket_box = Box(args[0])   # test, possible (host,port)
+                # Note: we had trouble figuring out how to create the box
+                #       we didn't figure out the parameters in time
+                socket_box = Box(args[0,0], args[0,1])   # test, possible (host,port)
+                nonce = nacl.utils.random(Box.NONCE_SIZE)
 
         # Bob wishes to send Alice an encrypted message so Bob must make a Box with
         #   his private key and Alice's public key
@@ -232,6 +237,7 @@ class socket:
             try:
                 # tries to receive a SYN/ACK packet from the server using recvfrom and unpacks it
                 (syn_ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
+                # Create a box and decrypt the message
                 syn_ack_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_ack_packet)
                 # if it receives a reset marked flag for any reason, abort the handshake
                 if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_RESET:
@@ -265,73 +271,11 @@ class socket:
         self.is_connected = True
 
         # sends the ack packet to the server, as it assumes it's connected now
+        # Need to encrypt the packet before sending (might not be correctly implemented here, wasn't sure about the nonce)
+        # Needed to make another box to send it
+        encrypted = socket_box.encrypt(ack_packet, nonce)
         self.socket.sendto(ack_packet, self.send_address)
         print("Client is now connected to the server at %s:%s" % (self.send_address[0], self.send_address[1]))
-
-
-
-        # Step 1: Request to connect to the server by setting the SYN flag
-        # first the packet is created using createPacket and passing in the apprpriate variables
-        syn_packet = self.createPacket(flags=SOCK352_SYN, sequence_no=self.sequence_no)
-        self.socket.sendto(syn_packet, self.send_address)
-        # increments the sequence since it was consumed in creation of the SYN packet
-        self.sequence_no += 1
-
-        # Receives the SYN_ACK from Step 2 within accept()
-
-        received_handshake_packet = False
-        while not received_handshake_packet:
-            try:
-                # tries to receive a SYN/ACK packet from the server using recvfrom and unpacks it
-                (syn_ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
-                syn_ack_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_ack_packet)
-                # if it receives a reset marked flag for any reason, abort the handshake
-                if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_RESET:
-                    print
-                    "Connection was reset by the server"
-                    return
-
-                # if it receives a packet, and it is SYN/ACK, we are done
-                if syn_ack_packet[PACKET_FLAG_INDEX] == SOCK352_SYN | SOCK352_ACK:
-                    received_handshake_packet = True
-
-                # if it receives a packet with an incorrect ACK from its sequence number,
-                # it tries to receive more packets
-                if syn_ack_packet[PACKET_ACK_NO_INDEX] != self.sequence_no:
-                    received_handshake_packet = False
-            # retransmits the SYN packet in case of timeout when receiving a SYN/ACK from the server
-            except syssock.timeout:
-                self.socket.sendto(syn_packet, self.send_address)
-
-        # sets the client's acknowledgement number to be SYN/ACK packet's sequence number + 1
-        self.ack_no = syn_ack_packet[PACKET_SEQUENCE_NO_INDEX] + 1
-
-        # Step 3: Send a packet with the ACK flag set to acknowledge the SYN/ACK packet
-        ack_packet = self.createPacket(flags=SOCK352_ACK,
-                                       sequence_no=self.sequence_no,
-                                       ack_no=self.ack_no)
-        # increments the sequence number as it was consumed by the ACK packet
-        self.sequence_no += 1
-
-        # sets the connected boolean to be true
-        self.is_connected = True
-
-        # sends the ack packet to the server, as it assumes it's connected now
-        self.socket.sendto(ack_packet, self.send_address)
-        print("Client is now connected to the server at %s:%s" % (self.send_address[0], self.send_address[1]))
-
-
-
-        # example code to parse an argument list (use option arguments if you want)
-        global portTx       #sock352portTx
-        global ENCRYPT
-        if (len(args) >= 1): 
-            (host,port) = args[0]
-        if (len(args) >= 2):
-            if (args[1] == ENCRYPT):
-                self.encrypt = True
-                
-        # your code goes here 
 
     def listen(self,backlog):
         # listen is not used in this assignments 
@@ -350,6 +294,18 @@ class socket:
             try:
                 # tries to receive a potential SYN packet and unpacks it
                 (syn_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
+                # example code to parse an argument list (use option arguments if you want)
+                global ENCRYPT
+                if (len(args) >= 1):
+                    if (args[0] == ENCRYPT):
+                        self.encryption = True
+                        # Take keys and use them to create another box
+                        # Note: we had trouble figuring out how to create the box
+                        #       we didn't figure out the parameters in time
+                        # Maybe we need to decrypt here? To read the header
+                        socket_box = Box(args[0, 0], args[0, 1])  # test, possible (host,port)
+                        nonce = nacl.utils.random(Box.NONCE_SIZE)
+
                 syn_packet = struct.unpack(PACKET_HEADER_FORMAT, syn_packet)
 
                 # if the received packet is not a SYN packet, it ignores the packet
@@ -370,7 +326,9 @@ class socket:
         # increments the sequence number as it just consumed it when creating the SYN/ACK packet
         self.sequence_no += 1
         # sends the created packet to the address from which it received the SYN packet
-        self.socket.sendto(syn_ack_packet, addr)
+        # Need to encrypt the contents of the packet (didn't get to implement properly here)
+        encrypted = socket_box.encrypt(syn_ack_packet, nonce)
+        self.socket.sendto(encrypted, addr)        # was self.socket.sendto(syn_ack_packet, addr)
 
         # Receive the final ACK to complete the handshake and establish connection
         got_final_ack = False
@@ -378,13 +336,17 @@ class socket:
             try:
                 # keeps trying to receive the final ACK packet to finalize the connection
                 (ack_packet, addr) = self.socket.recvfrom(PACKET_HEADER_LENGTH)
+                # May need to decrypt the packet contents here (didn't get to implement)
                 ack_packet = struct.unpack(PACKET_HEADER_FORMAT, ack_packet)
                 # if the unpacked packet has the ACK flag set, we are done
                 if ack_packet[PACKET_FLAG_INDEX] == SOCK352_ACK:
                     got_final_ack = True
             # if the server times out when trying to receive the final ACK, it retransmits the SYN/ACK packet
             except syssock.timeout:
-                self.socket.sendto(syn_ack_packet, addr)
+                # Need to encrypt the packet before sending (might not be correctly implemented here, wasn't sure about the nonce)
+                # Needed to make another box to send it
+                encrypted = socket_box.encrypt(syn_ack_packet, nonce)
+                self.socket.sendto(encrypted, addr)
 
         # updates the server's ack number to be the last packet's sequence number + 1
         self.ack_no = ack_packet[PACKET_SEQUENCE_NO_INDEX] + 1
@@ -399,16 +361,6 @@ class socket:
         self.is_connected = True
 
         print("Server is now connected to the client at %s:%s" % (self.send_address[0], self.send_address[1]))
-
-
-
-        # example code to parse an argument list (use option arguments if you want)
-        global ENCRYPT
-        if (len(args) >= 1):
-            if (args[0] == ENCRYPT):
-                self.encryption = True
-        # your code goes here
-
 
         return self, addr
 
