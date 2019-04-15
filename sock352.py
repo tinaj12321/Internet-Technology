@@ -327,8 +327,11 @@ class socket:
         self.sequence_no += 1
         # sends the created packet to the address from which it received the SYN packet
         # Need to encrypt the contents of the packet (didn't get to implement properly here)
-        encrypted = socket_box.encrypt(syn_ack_packet, nonce)
-        self.socket.sendto(encrypted, addr)        # was self.socket.sendto(syn_ack_packet, addr)
+        if(self.encryption = True):
+            encrypted = socket_box.encrypt(syn_ack_packet, nonce)
+            self.socket.sendto(encrypted, addr)        # was self.socket.sendto(syn_ack_packet, addr)
+        else:
+            self.socket.sendto(syn_ack_packet, addr)
 
         # Receive the final ACK to complete the handshake and establish connection
         got_final_ack = False
@@ -345,8 +348,11 @@ class socket:
             except syssock.timeout:
                 # Need to encrypt the packet before sending (might not be correctly implemented here, wasn't sure about the nonce)
                 # Needed to make another box to send it
-                encrypted = socket_box.encrypt(syn_ack_packet, nonce)
-                self.socket.sendto(encrypted, addr)
+                if(self.encrpytion = True):
+                    encrypted = socket_box.encrypt(syn_ack_packet, nonce)
+                    self.socket.sendto(encrypted, addr)
+                else:
+                    self.socket.sendto(syn_ack_packet, addr)
 
         # updates the server's ack number to be the last packet's sequence number + 1
         self.ack_no = ack_packet[PACKET_SEQUENCE_NO_INDEX] + 1
