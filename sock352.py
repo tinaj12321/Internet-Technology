@@ -540,6 +540,29 @@ class socket:
             # tries to receive the new packet and un-pack it
             try:
                 new_packet = self.socket.recv(PACKET_HEADER_LENGTH)
+                
+
+                #remove specfied amount of data from the buffer (I think that would be data_received)
+                new_data =  len(buffer)-data_received
+
+                #return amount of data
+
+                #not sure if syntax is correct but I think this is the overall ago: get the size of the
+                #packet
+                #first case: packet is empty, wait for something to resturn
+
+                if(new_data == 0)
+                    try:
+                    #wait for buffer to have something to return
+                #second case: buffer is not empty and there is something to return
+                #check if buffer is at max size
+                elif(new_data >32):
+                    #wait until 
+                    try:
+                        #do not send until new_data < 32
+                    except syssock.timeout
+
+
                 new_packet = struct.unpack(PACKET_HEADER_FORMAT, new_packet)
 
                 # ignores the packet if the ACK flag is not set.
@@ -555,6 +578,8 @@ class socket:
 
             # in the case where the recv times out, it locks down retransmit and sets it to True
             # to indicate that no ACk was received within the timeout window of 0.2 seconds
+
+            #if there is a timeout, go back to 2 (not sure what that means)
             except syssock.timeout:
                 self.retransmit_lock.acquire()
                 self.retransmit = True
